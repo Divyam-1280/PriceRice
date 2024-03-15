@@ -10,6 +10,10 @@ import {
 } from "@/lib/util";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 86400;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET() {
   try {
     connecttoDB();
@@ -43,7 +47,7 @@ export async function GET() {
           averagePrice: getAveragePrice(updatedPriceHistory),
         };
 
-        const filter = { url: scrapedProduct.url };
+        const filter = { url: product.url };
 
         const updatedProduct = await Product.findOneAndUpdate(filter, product);
 
