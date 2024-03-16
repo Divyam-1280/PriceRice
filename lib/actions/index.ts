@@ -7,10 +7,11 @@ import { connecttoDB } from "../mongoose";
 import { scrapeAmazonProduct } from "../scraper";
 import { getAveragePrice, getHighestPrice, getLowestPrice } from "../util";
 import { generateEmailBody, sendEmail } from "../nodemailer";
+import { redirect } from "next/navigation";
 
 export async function scrapeAndStoreProduct(productUrl: string) {
   if (!productUrl) return;
-
+  let prod;
   try {
     connecttoDB();
 
@@ -39,11 +40,12 @@ export async function scrapeAndStoreProduct(productUrl: string) {
     const filter = { url: scrapedProduct.url };
     const options = { upsert: true, new: true };
     const newProduct = await Product.findOneAndUpdate(filter, product, options);
-
+    prod = newProduct._id;
     revalidatePath(`/products/${newProduct._id}`);
   } catch (error: any) {
     throw new Error(`Failed to create/update product: ${error.message}`);
   }
+  redirect(`/products/${prod}`);
 }
 
 export async function getProductById(productId: string) {
