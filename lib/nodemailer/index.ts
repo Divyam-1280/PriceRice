@@ -1,5 +1,6 @@
 import { EmailContent, EmailProductInfo, NotificationType } from "@/types";
-import nodemailer from "nodemailer";
+
+import { Resend } from "resend";
 
 export const Notification = {
   WELCOME: "WELCOME",
@@ -7,6 +8,8 @@ export const Notification = {
   LOWEST_PRICE: "LOWEST_PRICE",
   THRESHOLD_MET: "THRESHOLD_MET",
 };
+
+const resend = new Resend("re_L4dQ1JfS_GUHsBDWsNdwTQYgr7H6aHpgL");
 
 export async function generateEmailBody(
   product: EmailProductInfo,
@@ -78,55 +81,21 @@ export async function generateEmailBody(
   return { subject, body };
 }
 
-const transporter = nodemailer.createTransport({
-  pool: true,
-  service: "hotmail",
-  port: 2525,
-  auth: {
-    user: "divyamraj700@outlook.com",
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  maxConnections: 1,
-});
-
 export const sendEmail = async (
   emailContent: EmailContent,
   sendTo: string[]
 ) => {
-  // ...
-
-  // Verify connection configuration
-  await new Promise((resolve, reject) => {
-    transporter.verify(function (error, success) {
-      if (error) {
-        console.log(error);
-        reject(error);
-      } else {
-        console.log("Server is ready to take our messages");
-        resolve(success);
-      }
+  try {
+    const response = await resend.emails.send({
+      from: "divyam@munsoc.in",
+      to: sendTo,
+      subject: emailContent.subject,
+      html: emailContent.body,
     });
-  });
-
-  // Send mail
-  const mailOptions = {
-    from: "divyamraj700@outlook.com",
-    to: sendTo,
-    html: emailContent.body,
-    subject: emailContent.subject,
-  };
-
-  await new Promise((resolve, reject) => {
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.error(err);
-        reject(err);
-      } else {
-        console.log(info);
-        resolve(info);
-      }
-    });
-  });
-
-  // ...
+    console.log(response);
+    return response;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 };
